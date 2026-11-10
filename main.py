@@ -1,32 +1,25 @@
-from flask import Flask, request, jsonify
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+import uvicorn
 
-app = Flask(__name__)
+app = FastAPI()
 
-# Route trang chủ kiểm tra server sống hay chết
-@app.route("/")
+@app.get("/")
 def home():
-    return "Xiaozhi Server is running!"
+    return {"status": "Xiaozhi Server is running!"}
 
-# Route API nhận dữ liệu từ thiết bị (Ví dụ: ESP32 gửi yêu cầu hoặc văn bản)
-@app.route("/api/chat", methods=["POST"])
-def chat():
-    # Lấy dữ liệu JSON do thiết bị gửi lên
-    data = request.get_json()
-    
-    if not data or "message" not in data:
-        return jsonify({"error": "Thiếu dữ liệu message!"}), 400
-    
-    user_message = data["message"]
-    print(f"Nhận được từ thiết bị: {user_message}")
-    
-    # Ở đây bạn có thể tích hợp logic xử lý (gọi AI, xử lý lệnh, v.v.)
-    reply_text = f"Server đã nhận được câu hỏi: '{user_message}'"
-    
-    # Trả về kết quả dạng JSON cho thiết bị
-    return jsonify({
-        "status": "success",
-        "reply": reply_text
-    })
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    print("ESP32 đã kết nối thành công!")
+    await websocket.send_text("Da ket noi AI Server!")
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    try:
+        while True:
+            data = await websocket.receive()
+            if "bytes" in data:
+                audio_chunk = data["bytes"]
+                print(f"Nhận được chunk audio từ ESP32: {len(audio_chunk)} bytes")
+    except WebSocketDisconnect:
+        print("ESP32 đã ngắt kết nối.")
+    except Exception as e:
+        print(f"Lỗi: {e}")
