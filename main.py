@@ -20,9 +20,9 @@ async def websocket_endpoint(websocket: WebSocket):
                 chunk = message["bytes"]
                 audio_buffer.extend(chunk)
                 
-                # Khi thu đủ một lượng âm thanh (ví dụ: khoảng 3-5 giây hoặc khi ngắt quãng)
-                if len(audio_buffer) > 16000 * 2 * 3:  # Khoảng 3 giây audio 16kHz 16-bit
-                    # Bước 1: Lưu buffer thành file wav tạm thời để gửi đi STT
+                # Khi thu đủ một lượng âm thanh (ví dụ: khoảng 3 giây audio 16kHz 16-bit)
+                if len(audio_buffer) > 16000 * 2 * 3:
+                    # Bước 1: Lưu buffer thành file wav tạm thời để xử lý
                     wav_io = io.BytesIO()
                     with wave.open(wav_io, 'wb') as wf:
                         wf.setnchannels(1)
@@ -31,6 +31,8 @@ async def websocket_endpoint(websocket: WebSocket):
                         wf.writeframes(audio_buffer)
                     wav_io.seek(0)
                     wav_io.name = "audio.wav"
+                    
+                    print("Đã nhận đủ gói dữ liệu âm thanh từ ESP32-S3, đang chờ tích hợp xử lý AI...")
                     
                     # Reset lại bộ đệm âm thanh sau khi xử lý xong
                     audio_buffer.clear()
