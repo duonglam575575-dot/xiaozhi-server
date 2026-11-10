@@ -93,3 +93,4 @@ async def websocket_endpoint(websocket: WebSocket):
         print("ESP32-S3 đã ngắt kết nối.")
     except Exception as e:
         print(f"Lỗi kết nối WebSocket: {e}")
+        h
